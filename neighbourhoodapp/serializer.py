@@ -25,3 +25,21 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
+
+
+class ContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact
+        fields = '__all__'
+
+
+class HoodAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NeighbourhoodAdmin
+        fields = '__all__'
+
+
+class SystemAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SystemAdmin
+        fields = '__all__'
