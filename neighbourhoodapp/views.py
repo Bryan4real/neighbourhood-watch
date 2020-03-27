@@ -203,3 +203,64 @@ class UpdateBusiness(generics.UpdateAPIView):
 
         else:
             return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Contacts(generics.CreateAPIView):
+    def post(self, request, *args, **kwargs):
+        hoodadmin = NeighbourhoodAdmin.objects.get(pk=self.kwargs["pk"])
+        system_admin = SystemAdmin.objects.get(pk=self.kwargs["pk"])
+        if hoodadmin.is_hood_admin or system_admin.is_admin:
+            try:
+                profile = Profile.objects.get(pk=self.kwargs["pk"])
+            except ObjectDoesNotExist:
+                return Response({"Object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+            service_name = request.data.get("service_name")
+            phone_no = request.data.get("phone_no")
+            location = request.data.get("location")
+            data = {'service_name': service_name, 'phone_no': phone_no, 'location': location,
+                    'neighbourhood': profile.neighbourhood.id}
+            serializer = ContactSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ContactList(generics.ListAPIView):
+    def get_queryset(self):
+        try:
+            profile = Profile.objects.get(pk=self.kwargs["pk"])
+        except ObjectDoesNotExist:
+            return Response({"Object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = Contact.objects.filter(neighbourhood=profile.neighbourhood.id)
+        return queryset
+
+    serializer_class = ContactSerializer
+
+
+class UpdateContacts(generics.UpdateAPIView):
+    def put(self, request, *args, **kwargs):
+        hoodadmin = NeighbourhoodAdmin.objects.get(pk=self.kwargs["pk"])
+        system_admin = SystemAdmin.objects.get(pk=self.kwargs["pk"])
+        if hoodadmin.is_hood_admin or system_admin.is_admin:
+            try:
+                profile = Profile.objects.get(pk=self.kwargs["pk"])
+            except ObjectDoesNotExist:
+                return Response({"Object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+            queryset = Contact.objects.get(neighbourhood=profile.neighbourhood.id,
+                                           service_name=self.kwargs["service_name"])
+            serializer = ContactSerializer(queryset, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
