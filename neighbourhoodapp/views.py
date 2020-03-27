@@ -264,3 +264,56 @@ class UpdateContacts(generics.UpdateAPIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserPosts(generics.ListCreateAPIView):
+    def get_queryset(self):
+        try:
+            profile = Profile.objects.get(pk=self.kwargs["pk"])
+        except ObjectDoesNotExist:
+            return Response({"Object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = Post.objects.filter(neighbourhood=profile.neighbourhood.id)
+        return queryset
+
+    serializer_class = PostSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            profile = Profile.objects.get(pk=self.kwargs["pk"])
+        except ObjectDoesNotExist:
+            return Response({"Object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        title = request.data.get("title")
+        post = request.data.get("post")
+        data = {"title": title, "post": post, "user": request.user.id, "neighbourhood": profile.neighbourhood.id}
+        serializer = PostSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddHoodAdmin(generics.RetrieveUpdateAPIView):
+    def get_queryset(self):
+        queryset = User.objects.filter(pk=self.kwargs["pk"])
+        return queryset
+
+    serializer_class = UserSerializer
+
+    def put(self, request, *args, **kwargs):
+        system_admin = SystemAdmin.objects.get(pk=self.kwargs["id"])
+        if system_admin.is_admin:
+            right = NeighbourhoodAdmin.objects.get(pk=self.kwargs["pk"])
+            is_hood_admin = request.data.get("is_hood_admin")
+            data = {"is_hood_admin": is_hood_admin, "user": self.kwargs["pk"]}
+            serializer = HoodAdminSerializer(right, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
