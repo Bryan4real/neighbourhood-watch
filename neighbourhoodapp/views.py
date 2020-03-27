@@ -84,3 +84,56 @@ class CreateNeighbourhood(generics.ListCreateAPIView):
 
         else:
             return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SpecificHood(generics.RetrieveAPIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            profile = Profile.objects.get(pk=self.kwargs["pk"])
+        except ObjectDoesNotExist:
+            return Response({"Object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = Neighbourhood.objects.get(pk=profile.neighbourhood.id)
+        serializer = NeighbourhoodSerializer(queryset)
+        if serializer.is_valid:
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EditHoodInfo(generics.RetrieveUpdateAPIView):
+    def get_queryset(self):
+        queryset = Neighbourhood.objects.filter(pk=self.kwargs["pk"])
+        return queryset
+
+    serializer_class = NeighbourhoodSerializer
+
+    def put(self, request, *args, **kwargs):
+        system_admin = SystemAdmin.objects.get(pk=self.kwargs["id"])
+        if system_admin.is_admin:
+            hood = Neighbourhood.objects.get(pk=self.kwargs["pk"])
+            serializer = NeighbourhoodSerializer(hood, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteHood(generics.DestroyAPIView):
+    def destroy(self, request, *args, **kwargs):
+        system_admin = SystemAdmin.objects.get(pk=self.kwargs["id"])
+        if system_admin.is_admin:
+            try:
+                queryset = Neighbourhood.objects.get(pk=self.kwargs["pk"])
+            except ObjectDoesNotExist:
+                return Response({"Neighbourhood does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+            queryset.delete()
+            return Response({"Neighbourhood deleted"})
+
+        else:
+            return Response({"Not authorized"}, status=status.HTTP_400_BAD_REQUEST)
