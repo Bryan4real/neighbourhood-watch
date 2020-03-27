@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Profile,Neighbourhood,Post,Business,NeighbourhoodAdmin,SystemAdmin,Contact
+from .models import Profile,Neighbourhood,Post,Business,NeighbourhoodAdmin,SystemAdmin,Contact#
+admin.site.site_header='Code  Africa'
 # Register your models here.
 
 
