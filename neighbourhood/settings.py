@@ -39,6 +39,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 
 INSTALLED_APPS = [
+    'rest_framework',
     'corsheaders',
     'neighbourhoodapp',
     'django.contrib.admin',
