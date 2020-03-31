@@ -64,7 +64,8 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_WHITELIST = [
     
-    "http://127.0.0.1:4200"
+    "http://127.0.0.1:4200/login"
+    "http://127.0.0.1:4200/register"
 ]
 
 ROOT_URLCONF = 'neighbourhood.urls'
